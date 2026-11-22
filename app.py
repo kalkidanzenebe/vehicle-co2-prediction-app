@@ -3,12 +3,13 @@ import streamlit as st
 import pandas as pd
 import joblib
 from pathlib import Path
+import os
 
 # ==========================================
 # PAGE CONFIGURATION
 # ==========================================
 st.set_page_config(
-    page_title="Vehicle CO₂ Predictor",
+    page_title="Vehicle CO2 Predictor",
     page_icon="🚗",
     layout="wide"
 )
@@ -24,182 +25,219 @@ if "prediction_error" not in st.session_state:
 
 
 # ==========================================
-# AUTOMOTIVE DASHBOARD DESIGN
+# CUSTOM CSS
 # ==========================================
 st.markdown("""
 <style>
-    .stApp {
-        background-color: #0B1220;
-        color: #F4F7FB;
-    }
+.stApp {
+    background-color: #0B1220;
+    color: #F4F7FB;
+}
 
-    [data-testid="stHeader"] {
-        background-color: #0B1220;
-    }
+[data-testid="stHeader"] {
+    background-color: #0B1220;
+}
 
-    .main .block-container {
-        max-width: 1250px;
-        padding-top: 1rem;
-        padding-bottom: 1rem;
-    }
+.main .block-container {
+    max-width: 1250px;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
 
-    .hero {
-        background: linear-gradient(120deg, #111D33, #172D4A);
-        border: 1px solid #00D4FF;
-        border-radius: 18px;
-        padding: 23px 15px;
-        text-align: center;
-        margin-bottom: 20px;
-    }
+.hero {
+    background: linear-gradient(120deg, #111D33, #172D4A);
+    border: 1px solid #00D4FF;
+    border-radius: 18px;
+    padding: 23px 15px;
+    text-align: center;
+    margin-bottom: 20px;
+}
 
-    .hero h1 {
-        color: #00D4FF;
-        font-size: 34px;
-        font-weight: 800;
-        margin-bottom: 5px;
-    }
+.hero h1 {
+    color: #00D4FF;
+    font-size: 34px;
+    font-weight: 800;
+    margin-bottom: 5px;
+}
 
-    .hero p {
-        color: #DCE7F5;
-        font-size: 15px;
-        margin-bottom: 0;
-    }
+.hero p {
+    color: #DCE7F5;
+    font-size: 15px;
+    margin-bottom: 0;
+}
 
-    h2, h3 {
-        color: #00D4FF !important;
-    }
+h2, h3 {
+    color: #00D4FF !important;
+}
 
-    p, label, span {
-        color: #F4F7FB;
-    }
+p, label, span {
+    color: #F4F7FB;
+}
 
-    [data-testid="stNumberInput"] label,
-    [data-testid="stSelectbox"] label {
-        color: #00D4FF !important;
-        font-weight: 600;
-    }
+[data-testid="stNumberInput"] label,
+[data-testid="stSelectbox"] label {
+    color: #00D4FF !important;
+    font-weight: 600;
+}
 
-    [data-testid="stNumberInput"] input {
-        background-color: #18263A;
-        color: #FFFFFF !important;
-        border: 1px solid #35516F;
-        border-radius: 8px;
-    }
+[data-testid="stNumberInput"] input {
+    background-color: #18263A;
+    color: #FFFFFF !important;
+    border: 1px solid #35516F;
+    border-radius: 8px;
+}
 
-    [data-testid="stSelectbox"] div[data-baseweb="select"] > div {
-        background-color: #18263A;
-        color: #FFFFFF;
-        border: 1px solid #35516F;
-        border-radius: 8px;
-    }
+[data-testid="stSelectbox"] div[data-baseweb="select"] > div {
+    background-color: #18263A;
+    color: #FFFFFF;
+    border: 1px solid #35516F;
+    border-radius: 8px;
+}
 
-    .panel {
-        background-color: #14253B;
-        border: 1px solid #35516F;
-        border-radius: 15px;
-        padding: 18px;
-        min-height: 145px;
-    }
+.panel {
+    background-color: #14253B;
+    border: 1px solid #35516F;
+    border-radius: 15px;
+    padding: 18px;
+    min-height: 145px;
+}
 
-    .result-card {
-        background: linear-gradient(135deg, #14253B, #1B3852);
-        border: 1px solid #00D4FF;
-        border-radius: 15px;
-        padding: 18px 10px;
-        text-align: center;
-        min-height: 145px;
-    }
+.result-card {
+    background: linear-gradient(135deg, #14253B, #1B3852);
+    border: 1px solid #00D4FF;
+    border-radius: 15px;
+    padding: 18px 10px;
+    text-align: center;
+    min-height: 145px;
+}
 
-    .result-label {
-        color: #AFC5DC;
-        font-size: 13px;
-        font-weight: 700;
-    }
+.result-label {
+    color: #AFC5DC;
+    font-size: 13px;
+    font-weight: 700;
+}
 
-    .result-value {
-        color: #00D4FF;
-        font-size: 38px;
-        font-weight: 800;
-        margin: 10px 0;
-    }
+.result-value {
+    color: #00D4FF;
+    font-size: 38px;
+    font-weight: 800;
+    margin: 10px 0;
+}
 
-    .result-unit {
-        color: #FFFFFF;
-        font-size: 14px;
-    }
+.result-unit {
+    color: #FFFFFF;
+    font-size: 14px;
+}
 
-    .waiting-card {
-        background-color: #18263A;
-        border: 1px dashed #54708C;
-        border-radius: 15px;
-        padding: 18px 10px;
-        text-align: center;
-        min-height: 145px;
-    }
+.waiting-card {
+    background-color: #18263A;
+    border: 1px dashed #54708C;
+    border-radius: 15px;
+    padding: 18px 10px;
+    text-align: center;
+    min-height: 145px;
+}
 
-    .waiting-card p {
-        color: #AFC5DC;
-        font-size: 14px;
-    }
+.waiting-card p {
+    color: #AFC5DC;
+    font-size: 14px;
+}
 
-    div.stButton > button {
-        background-color: #00D4FF;
-        color: #081321;
-        border: none;
-        border-radius: 10px;
-        min-height: 52px;
-        font-size: 15px;
-        font-weight: 800;
-        width: 100%;
-    }
+div.stButton > button {
+    background-color: #00D4FF;
+    color: #081321;
+    border: none;
+    border-radius: 10px;
+    min-height: 52px;
+    font-size: 15px;
+    font-weight: 800;
+    width: 100%;
+}
 
-    div.stButton > button:hover {
-        background-color: #75E8FF;
-        color: #081321;
-    }
+div.stButton > button:hover {
+    background-color: #75E8FF;
+    color: #081321;
+}
 
-    .footer {
-        text-align: center;
-        color: #8FAAC5;
-        padding: 15px;
-        font-size: 12px;
-    }
+.footer {
+    text-align: center;
+    color: #8FAAC5;
+    padding: 15px;
+    font-size: 12px;
+}
 
-    hr {
-        border-color: #263D59;
-    }
+hr {
+    border-color: #263D59;
+}
 </style>
 """, unsafe_allow_html=True)
 
 
 # ==========================================
-# LOAD TRAINED MODEL
+# LOAD TRAINED MODEL SAFELY
 # ==========================================
 current_folder = Path(__file__).resolve().parent
 
 possible_model_paths = [
     current_folder / "final_random_forest_model.pkl",
-    current_folder / "../models/final_random_forest_model.pkl",
-    current_folder / "models/final_random_forest_model.pkl",
-    Path.cwd() / "final_random_forest_model.pkl"
+    current_folder / "models" / "final_random_forest_model.pkl",
+    current_folder.parent / "models" / "final_random_forest_model.pkl",
+    Path.cwd() / "final_random_forest_model.pkl",
+    Path.cwd() / "models" / "final_random_forest_model.pkl"
 ]
 
-model_path = next(
-    (path for path in possible_model_paths if path.exists()),
-    None
-)
+model_path = None
+
+for path in possible_model_paths:
+    if path.is_file():
+        model_path = path
+        break
 
 if model_path is None:
-    st.error("Model file not found.")
-    st.write("Please check the model file location.")
+    st.error("Trained model file was not found.")
+
+    st.markdown("""
+    **Expected model filename:**
+
+    `final_random_forest_model.pkl`
+
+    Upload the trained model into your GitHub repository,
+    or place it in the `models` folder.
+    """)
     st.stop()
 
+
+# Check whether model file is empty
+file_size = os.path.getsize(model_path)
+
+if file_size == 0:
+    st.error("Your model file is empty (0 bytes).")
+    st.warning(
+        "Upload a fresh copy of final_random_forest_model.pkl "
+        "from your Google Drive models folder."
+    )
+    st.stop()
+
+
+# Load the model
 try:
     model = joblib.load(model_path)
 
+except EOFError:
+    st.error("The model file is incomplete or corrupted.")
+    st.warning(
+        "Replace the existing model file with a fresh trained "
+        "model file from Google Drive."
+    )
+    st.write("Model file:", str(model_path))
+    st.write("File size:", f"{file_size:,} bytes")
+    st.stop()
+
 except Exception as error:
-    st.error("Model loading failed. Exact error:")
+    st.error("Model loading failed.")
     st.code(repr(error))
+    st.write("Model file:", str(model_path))
+    st.write("File size:", f"{file_size:,} bytes")
     st.stop()
 
 
@@ -218,7 +256,7 @@ st.markdown("""
 
 
 # ==========================================
-# VEHICLE SPECIFICATIONS
+# VEHICLE INPUTS
 # ==========================================
 st.markdown("### Vehicle Specifications")
 
@@ -227,9 +265,6 @@ st.write(
     "its carbon dioxide emissions."
 )
 
-# ==========================================
-# INPUT FIELDS
-# ==========================================
 col1, col2 = st.columns(2)
 
 with col1:
@@ -289,7 +324,7 @@ with col2:
 
 
 # ==========================================
-# PREDICTION BUTTON AND RESULT SIDE BY SIDE
+# BUTTON AND RESULT SIDE BY SIDE
 # ==========================================
 st.markdown("---")
 st.markdown("### CO₂ Emissions Estimation")
@@ -299,7 +334,7 @@ button_col, result_col = st.columns(
     gap="medium"
 )
 
-# LEFT SIDE: ACTUAL CLICKABLE BUTTON
+# LEFT PANEL: REAL BUTTON
 with button_col:
 
     st.markdown("""
@@ -320,7 +355,7 @@ with button_col:
     )
 
 
-# RUN THE PREDICTION WHEN BUTTON IS CLICKED
+# PREDICTION
 if predict_clicked:
 
     input_data = pd.DataFrame([{
@@ -332,7 +367,6 @@ if predict_clicked:
     }])
 
     try:
-        # Original Random Forest prediction logic
         prediction = model.predict(input_data)[0]
 
         st.session_state.prediction_result = float(prediction)
@@ -343,7 +377,7 @@ if predict_clicked:
         st.session_state.prediction_error = repr(error)
 
 
-# RIGHT SIDE: PREDICTION RESULT
+# RIGHT PANEL: RESULT
 with result_col:
 
     if st.session_state.prediction_error is not None:
