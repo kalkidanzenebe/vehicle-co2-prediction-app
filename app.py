@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# AUTOMOTIVE DASHBOARD DESIGN
+# CUSTOM AUTOMOTIVE DASHBOARD DESIGN
 # ==========================================
 st.markdown("""
 <style>
@@ -29,7 +29,7 @@ st.markdown("""
 
     .main .block-container {
         max-width: 1250px;
-        padding-top: 1rem;
+        padding-top: 1.2rem;
         padding-bottom: 1rem;
     }
 
@@ -37,9 +37,9 @@ st.markdown("""
         background: linear-gradient(120deg, #111D33, #172D4A);
         border: 1px solid #00D4FF;
         border-radius: 18px;
-        padding: 25px 18px;
+        padding: 28px 20px;
         text-align: center;
-        margin-bottom: 20px;
+        margin-bottom: 22px;
     }
 
     .hero h1 {
@@ -52,6 +52,7 @@ st.markdown("""
     .hero p {
         color: #DCE7F5;
         font-size: 16px;
+        margin-bottom: 0;
     }
 
     h2, h3 {
@@ -82,6 +83,10 @@ st.markdown("""
         border-radius: 8px;
     }
 
+    [data-testid="stSelectbox"] div {
+        color: #FFFFFF;
+    }
+
     [data-testid="stForm"] {
         background-color: #111D30;
         padding: 18px;
@@ -109,9 +114,9 @@ st.markdown("""
         background: linear-gradient(135deg, #14253B, #1B3852);
         border: 1px solid #00D4FF;
         border-radius: 18px;
-        padding: 25px;
+        padding: 28px;
         text-align: center;
-        margin-top: 10px;
+        margin-top: 12px;
     }
 
     .result-label {
@@ -178,7 +183,7 @@ except Exception as error:
 
 
 # ==========================================
-# HEADER
+# HERO HEADER
 # ==========================================
 st.markdown("""
 <div class="hero">
@@ -192,18 +197,18 @@ st.markdown("""
 
 
 # ==========================================
-# VEHICLE INPUT SECTION
+# INTRODUCTION
 # ==========================================
 st.markdown("### Vehicle Specifications")
 
 st.write(
-    "Enter your vehicle information below "
-    "to estimate its carbon dioxide emissions."
+    "Enter the vehicle details below to estimate "
+    "its carbon dioxide emissions."
 )
 
 
 # ==========================================
-# INPUT FORM
+# VEHICLE INPUT FORM
 # ==========================================
 with st.form("vehicle_prediction_form"):
 
@@ -265,13 +270,13 @@ with st.form("vehicle_prediction_form"):
         )
 
     submitted = st.form_submit_button(
-        "🚗 PREDICT CO₂ EMISSIONS",
+        "⚡ PREDICT CO₂ EMISSIONS",
         use_container_width=True
     )
 
 
 # ==========================================
-# CO₂ EMISSIONS PREDICTION
+# PREDICTION RESULT
 # ==========================================
 if submitted:
 
@@ -285,22 +290,19 @@ if submitted:
 
     try:
 
-        # Original trained model prediction
         prediction = model.predict(input_data)[0]
 
         st.markdown("---")
-        st.markdown("### Prediction Result")
+        st.markdown("### Emissions Prediction")
 
         st.markdown(f"""
         <div class="result-card">
             <div class="result-label">
-                PREDICTED CO₂ EMISSIONS
+                ESTIMATED CARBON DIOXIDE EMISSIONS
             </div>
-
             <div class="result-value">
                 {prediction:.2f}
             </div>
-
             <div class="result-unit">
                 grams of CO₂ per kilometre (g/km)
             </div>
