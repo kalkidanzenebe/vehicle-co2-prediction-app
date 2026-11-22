@@ -14,6 +14,16 @@ st.set_page_config(
 )
 
 # ==========================================
+# SESSION STATE
+# ==========================================
+if "prediction_result" not in st.session_state:
+    st.session_state.prediction_result = None
+
+if "prediction_error" not in st.session_state:
+    st.session_state.prediction_error = None
+
+
+# ==========================================
 # AUTOMOTIVE DASHBOARD DESIGN
 # ==========================================
 st.markdown("""
@@ -37,9 +47,9 @@ st.markdown("""
         background: linear-gradient(120deg, #111D33, #172D4A);
         border: 1px solid #00D4FF;
         border-radius: 18px;
-        padding: 22px 15px;
+        padding: 23px 15px;
         text-align: center;
-        margin-bottom: 18px;
+        margin-bottom: 20px;
     }
 
     .hero h1 {
@@ -52,6 +62,7 @@ st.markdown("""
     .hero p {
         color: #DCE7F5;
         font-size: 15px;
+        margin-bottom: 0;
     }
 
     h2, h3 {
@@ -82,11 +93,53 @@ st.markdown("""
         border-radius: 8px;
     }
 
-    [data-testid="stForm"] {
-        background-color: #111D30;
-        padding: 15px;
-        border: 1px solid #263D59;
+    .panel {
+        background-color: #14253B;
+        border: 1px solid #35516F;
         border-radius: 15px;
+        padding: 18px;
+        min-height: 145px;
+    }
+
+    .result-card {
+        background: linear-gradient(135deg, #14253B, #1B3852);
+        border: 1px solid #00D4FF;
+        border-radius: 15px;
+        padding: 18px 10px;
+        text-align: center;
+        min-height: 145px;
+    }
+
+    .result-label {
+        color: #AFC5DC;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .result-value {
+        color: #00D4FF;
+        font-size: 38px;
+        font-weight: 800;
+        margin: 10px 0;
+    }
+
+    .result-unit {
+        color: #FFFFFF;
+        font-size: 14px;
+    }
+
+    .waiting-card {
+        background-color: #18263A;
+        border: 1px dashed #54708C;
+        border-radius: 15px;
+        padding: 18px 10px;
+        text-align: center;
+        min-height: 145px;
+    }
+
+    .waiting-card p {
+        color: #AFC5DC;
+        font-size: 14px;
     }
 
     div.stButton > button {
@@ -94,7 +147,7 @@ st.markdown("""
         color: #081321;
         border: none;
         border-radius: 10px;
-        min-height: 50px;
+        min-height: 52px;
         font-size: 15px;
         font-weight: 800;
         width: 100%;
@@ -105,51 +158,10 @@ st.markdown("""
         color: #081321;
     }
 
-    .result-card {
-        background: linear-gradient(135deg, #14253B, #1B3852);
-        border: 1px solid #00D4FF;
-        border-radius: 14px;
-        padding: 15px 8px;
-        text-align: center;
-        min-height: 105px;
-    }
-
-    .result-label {
-        color: #AFC5DC;
-        font-size: 12px;
-        font-weight: 600;
-    }
-
-    .result-value {
-        color: #00D4FF;
-        font-size: 32px;
-        font-weight: 800;
-        margin: 5px 0;
-    }
-
-    .result-unit {
-        color: #FFFFFF;
-        font-size: 13px;
-    }
-
-    .waiting-card {
-        background-color: #18263A;
-        border: 1px dashed #54708C;
-        border-radius: 14px;
-        padding: 15px 8px;
-        text-align: center;
-        min-height: 105px;
-    }
-
-    .waiting-card p {
-        color: #AFC5DC;
-        font-size: 13px;
-    }
-
     .footer {
         text-align: center;
         color: #8FAAC5;
-        padding: 12px;
+        padding: 15px;
         font-size: 12px;
     }
 
@@ -161,7 +173,7 @@ st.markdown("""
 
 
 # ==========================================
-# LOAD TRAINED RANDOM FOREST MODEL
+# LOAD TRAINED MODEL
 # ==========================================
 current_folder = Path(__file__).resolve().parent
 
@@ -179,18 +191,14 @@ model_path = next(
 
 if model_path is None:
     st.error("Model file not found.")
-    st.write("The app checked these locations:")
-
-    for path in possible_model_paths:
-        st.code(str(path))
-
+    st.write("Please check the model file location.")
     st.stop()
 
 try:
     model = joblib.load(model_path)
 
 except Exception as error:
-    st.error("Model loading failed. Here is the exact error:")
+    st.error("Model loading failed. Exact error:")
     st.code(repr(error))
     st.stop()
 
@@ -210,139 +218,170 @@ st.markdown("""
 
 
 # ==========================================
-# VEHICLE INPUT FORM
+# VEHICLE SPECIFICATIONS
 # ==========================================
 st.markdown("### Vehicle Specifications")
 
 st.write(
-    "Enter the vehicle information to estimate "
+    "Select your vehicle details below to estimate "
     "its carbon dioxide emissions."
 )
 
-with st.form("vehicle_prediction_form"):
+# ==========================================
+# INPUT FIELDS
+# ==========================================
+col1, col2 = st.columns(2)
 
-    col1, col2 = st.columns(2)
+with col1:
 
-    with col1:
+    vehicle_class = st.selectbox(
+        "Vehicle Class",
+        [
+            "COMPACT",
+            "SUV - SMALL",
+            "SUV - STANDARD",
+            "MID-SIZE",
+            "FULL-SIZE",
+            "TWO-SEATER",
+            "MINICOMPACT",
+            "SUBCOMPACT",
+            "PICKUP TRUCK - SMALL",
+            "PICKUP TRUCK - STANDARD",
+            "MINIVAN",
+            "VAN - CARGO",
+            "VAN - PASSENGER",
+            "STATION WAGON - SMALL",
+            "STATION WAGON - MID-SIZE",
+            "SPECIAL PURPOSE VEHICLE"
+        ]
+    )
 
-        vehicle_class = st.selectbox(
-            "Vehicle Class",
-            [
-                "COMPACT",
-                "SUV - SMALL",
-                "SUV - STANDARD",
-                "MID-SIZE",
-                "FULL-SIZE",
-                "TWO-SEATER",
-                "MINICOMPACT",
-                "SUBCOMPACT",
-                "PICKUP TRUCK - SMALL",
-                "PICKUP TRUCK - STANDARD",
-                "MINIVAN",
-                "VAN - CARGO",
-                "VAN - PASSENGER",
-                "STATION WAGON - SMALL",
-                "STATION WAGON - MID-SIZE",
-                "SPECIAL PURPOSE VEHICLE"
-            ]
-        )
+    engine_size = st.number_input(
+        "Engine Size (L)",
+        min_value=0.0,
+        value=2.0,
+        step=0.1,
+        format="%.1f"
+    )
 
-        engine_size = st.number_input(
-            "Engine Size (L)",
-            min_value=0.0,
-            value=2.0,
-            step=0.1,
-            format="%.1f"
-        )
+    cylinders = st.selectbox(
+        "Number of Cylinders",
+        [3, 4, 5, 6, 8, 10, 12, 16]
+    )
 
-        cylinders = st.selectbox(
-            "Number of Cylinders",
-            [3, 4, 5, 6, 8, 10, 12, 16]
-        )
+with col2:
 
-    with col2:
+    transmission = st.selectbox(
+        "Transmission",
+        [
+            "A4", "A5", "A6", "A7", "A8", "A9", "A10",
+            "AM5", "AM6", "AM7", "AM8", "AM9",
+            "AS4", "AS5", "AS6", "AS7", "AS8", "AS9",
+            "AS10", "AV", "AV6", "AV7", "AV8", "AV10",
+            "M5", "M6", "M7"
+        ]
+    )
 
-        transmission = st.selectbox(
-            "Transmission",
-            [
-                "A4", "A5", "A6", "A7", "A8", "A9", "A10",
-                "AM5", "AM6", "AM7", "AM8", "AM9",
-                "AS4", "AS5", "AS6", "AS7", "AS8", "AS9",
-                "AS10", "AV", "AV6", "AV7", "AV8", "AV10",
-                "M5", "M6", "M7"
-            ]
-        )
+    fuel_type = st.selectbox(
+        "Fuel Type",
+        ["X", "Z", "D", "E", "N"]
+    )
 
-        fuel_type = st.selectbox(
-            "Fuel Type",
-            ["X", "Z", "D", "E", "N"]
-        )
 
-    submitted = st.form_submit_button(
+# ==========================================
+# PREDICTION BUTTON AND RESULT SIDE BY SIDE
+# ==========================================
+st.markdown("---")
+st.markdown("### CO₂ Emissions Estimation")
+
+button_col, result_col = st.columns(
+    [1, 1.4],
+    gap="medium"
+)
+
+# LEFT SIDE: ACTUAL CLICKABLE BUTTON
+with button_col:
+
+    st.markdown("""
+    <div class="panel">
+        <p style="color:#00D4FF;font-weight:700;font-size:16px;">
+            VEHICLE EMISSIONS ANALYSIS
+        </p>
+        <p style="color:#DCE7F5;font-size:13px;">
+            Click below to calculate the estimated CO₂ emissions
+            for your selected vehicle.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    predict_clicked = st.button(
         "🚗 PREDICT CO₂ EMISSIONS",
         use_container_width=True
     )
 
 
-# ==========================================
-# PREDICTION
-# ==========================================
-st.markdown("### CO₂ Emissions Estimation")
+# RUN THE PREDICTION WHEN BUTTON IS CLICKED
+if predict_clicked:
 
-button_col, result_col = st.columns([1, 1.4], gap="medium")
+    input_data = pd.DataFrame([{
+        "Vehicle Class": vehicle_class,
+        "Engine Size(L)": engine_size,
+        "Cylinders": cylinders,
+        "Transmission": transmission,
+        "Fuel Type": fuel_type
+    }])
 
-with button_col:
+    try:
+        # Original Random Forest prediction logic
+        prediction = model.predict(input_data)[0]
 
-    st.markdown("""
-    <div class="waiting-card">
-        <p>VEHICLE EMISSIONS ANALYSIS</p>
-        <p style="font-size:18px;font-weight:700;color:#00D4FF;">
-            Ready to estimate
-        </p>
-        <p>Enter details and click the prediction button above.</p>
-    </div>
-    """, unsafe_allow_html=True)
+        st.session_state.prediction_result = float(prediction)
+        st.session_state.prediction_error = None
 
+    except Exception as error:
+        st.session_state.prediction_result = None
+        st.session_state.prediction_error = repr(error)
+
+
+# RIGHT SIDE: PREDICTION RESULT
 with result_col:
 
-    if submitted:
+    if st.session_state.prediction_error is not None:
 
-        input_data = pd.DataFrame([{
-            "Vehicle Class": vehicle_class,
-            "Engine Size(L)": engine_size,
-            "Cylinders": cylinders,
-            "Transmission": transmission,
-            "Fuel Type": fuel_type
-        }])
+        st.error("Prediction failed.")
+        st.code(st.session_state.prediction_error)
 
-        try:
-            # Original trained model prediction
-            prediction = model.predict(input_data)[0]
+    elif st.session_state.prediction_result is not None:
 
-            st.markdown(f"""
-            <div class="result-card">
-                <div class="result-label">
-                    ESTIMATED CO₂ EMISSIONS
-                </div>
-                <div class="result-value">
-                    {prediction:.2f}
-                </div>
-                <div class="result-unit">
-                    grams of CO₂ per kilometre (g/km)
-                </div>
+        prediction = st.session_state.prediction_result
+
+        st.markdown(f"""
+        <div class="result-card">
+            <div class="result-label">
+                ESTIMATED CO₂ EMISSIONS
             </div>
-            """, unsafe_allow_html=True)
 
-        except Exception as error:
-            st.error("Prediction failed. Exact error:")
-            st.code(repr(error))
+            <div class="result-value">
+                {prediction:.2f}
+            </div>
+
+            <div class="result-unit">
+                grams of CO₂ per kilometre (g/km)
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
     else:
 
         st.markdown("""
         <div class="waiting-card">
             <p>ESTIMATED CO₂ EMISSIONS</p>
-            <p style="font-size:22px;font-weight:700;color:#00D4FF;">
+            <p style="
+                color:#00D4FF;
+                font-size:32px;
+                font-weight:800;
+                margin:10px 0;
+            ">
                 -- g/km
             </p>
             <p>Your prediction will appear here.</p>
