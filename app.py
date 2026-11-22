@@ -52,7 +52,6 @@ st.markdown("""
     .hero p {
         color: #DCE7F5;
         font-size: 15px;
-        margin-bottom: 0;
     }
 
     h2, h3 {
@@ -110,7 +109,7 @@ st.markdown("""
         background: linear-gradient(135deg, #14253B, #1B3852);
         border: 1px solid #00D4FF;
         border-radius: 14px;
-        padding: 12px 8px;
+        padding: 15px 8px;
         text-align: center;
         min-height: 105px;
     }
@@ -162,7 +161,7 @@ st.markdown("""
 
 
 # ==========================================
-# LOAD TRAINED MODEL
+# LOAD TRAINED RANDOM FOREST MODEL
 # ==========================================
 current_folder = Path(__file__).resolve().parent
 
@@ -179,16 +178,20 @@ model_path = next(
 )
 
 if model_path is None:
-    st.error(
-        "Model file not found. Please check that "
-        "final_random_forest_model.pkl is included in your repository."
-    )
+    st.error("Model file not found.")
+    st.write("The app checked these locations:")
+
+    for path in possible_model_paths:
+        st.code(str(path))
+
     st.stop()
 
 try:
     model = joblib.load(model_path)
+
 except Exception as error:
-    st.error(f"Could not load model: {error}")
+    st.error("Model loading failed. Here is the exact error:")
+    st.code(repr(error))
     st.stop()
 
 
@@ -282,7 +285,7 @@ with st.form("vehicle_prediction_form"):
 
 
 # ==========================================
-# BUTTON AND RESULT SIDE BY SIDE
+# PREDICTION
 # ==========================================
 st.markdown("### CO₂ Emissions Estimation")
 
@@ -291,20 +294,12 @@ button_col, result_col = st.columns([1, 1.4], gap="medium")
 with button_col:
 
     st.markdown("""
-    <div style="
-        background:#14253B;
-        border:1px solid #35516F;
-        border-radius:14px;
-        padding:15px;
-        text-align:center;
-        min-height:105px;
-    ">
-        <p style="color:#AFC5DC;font-size:13px;">
-            YOUR VEHICLE EMISSIONS
+    <div class="waiting-card">
+        <p>VEHICLE EMISSIONS ANALYSIS</p>
+        <p style="font-size:18px;font-weight:700;color:#00D4FF;">
+            Ready to estimate
         </p>
-        <p style="color:#00D4FF;font-size:17px;font-weight:700;">
-            Ready to estimate?
-        </p>
+        <p>Enter details and click the prediction button above.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -321,7 +316,7 @@ with result_col:
         }])
 
         try:
-            # Original model prediction logic
+            # Original trained model prediction
             prediction = model.predict(input_data)[0]
 
             st.markdown(f"""
@@ -339,7 +334,8 @@ with result_col:
             """, unsafe_allow_html=True)
 
         except Exception as error:
-            st.error(f"Prediction failed: {error}")
+            st.error("Prediction failed. Exact error:")
+            st.code(repr(error))
 
     else:
 
@@ -349,7 +345,7 @@ with result_col:
             <p style="font-size:22px;font-weight:700;color:#00D4FF;">
                 -- g/km
             </p>
-            <p>Enter vehicle details and click Predict.</p>
+            <p>Your prediction will appear here.</p>
         </div>
         """, unsafe_allow_html=True)
 
