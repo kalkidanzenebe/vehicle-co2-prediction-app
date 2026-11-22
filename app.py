@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# CUSTOM AUTOMOTIVE DASHBOARD DESIGN
+# AUTOMOTIVE DASHBOARD DESIGN
 # ==========================================
 st.markdown("""
 <style>
@@ -29,7 +29,7 @@ st.markdown("""
 
     .main .block-container {
         max-width: 1250px;
-        padding-top: 1.2rem;
+        padding-top: 1rem;
         padding-bottom: 1rem;
     }
 
@@ -37,21 +37,21 @@ st.markdown("""
         background: linear-gradient(120deg, #111D33, #172D4A);
         border: 1px solid #00D4FF;
         border-radius: 18px;
-        padding: 28px 20px;
+        padding: 22px 15px;
         text-align: center;
-        margin-bottom: 22px;
+        margin-bottom: 18px;
     }
 
     .hero h1 {
         color: #00D4FF;
-        font-size: 36px;
+        font-size: 34px;
         font-weight: 800;
-        margin-bottom: 8px;
+        margin-bottom: 5px;
     }
 
     .hero p {
         color: #DCE7F5;
-        font-size: 16px;
+        font-size: 15px;
         margin-bottom: 0;
     }
 
@@ -83,29 +83,25 @@ st.markdown("""
         border-radius: 8px;
     }
 
-    [data-testid="stSelectbox"] div {
-        color: #FFFFFF;
-    }
-
     [data-testid="stForm"] {
         background-color: #111D30;
-        padding: 18px;
+        padding: 15px;
         border: 1px solid #263D59;
         border-radius: 15px;
     }
 
-    div[data-testid="stFormSubmitButton"] > button {
+    div.stButton > button {
         background-color: #00D4FF;
         color: #081321;
         border: none;
         border-radius: 10px;
-        min-height: 48px;
-        font-size: 16px;
+        min-height: 50px;
+        font-size: 15px;
         font-weight: 800;
         width: 100%;
     }
 
-    div[data-testid="stFormSubmitButton"] > button:hover {
+    div.stButton > button:hover {
         background-color: #75E8FF;
         color: #081321;
     }
@@ -113,34 +109,48 @@ st.markdown("""
     .result-card {
         background: linear-gradient(135deg, #14253B, #1B3852);
         border: 1px solid #00D4FF;
-        border-radius: 18px;
-        padding: 28px;
+        border-radius: 14px;
+        padding: 12px 8px;
         text-align: center;
-        margin-top: 12px;
+        min-height: 105px;
     }
 
     .result-label {
         color: #AFC5DC;
-        font-size: 16px;
+        font-size: 12px;
         font-weight: 600;
     }
 
     .result-value {
         color: #00D4FF;
-        font-size: 44px;
+        font-size: 32px;
         font-weight: 800;
-        margin: 10px 0;
+        margin: 5px 0;
     }
 
     .result-unit {
         color: #FFFFFF;
-        font-size: 17px;
+        font-size: 13px;
+    }
+
+    .waiting-card {
+        background-color: #18263A;
+        border: 1px dashed #54708C;
+        border-radius: 14px;
+        padding: 15px 8px;
+        text-align: center;
+        min-height: 105px;
+    }
+
+    .waiting-card p {
+        color: #AFC5DC;
+        font-size: 13px;
     }
 
     .footer {
         text-align: center;
         color: #8FAAC5;
-        padding: 15px;
+        padding: 12px;
         font-size: 12px;
     }
 
@@ -152,7 +162,7 @@ st.markdown("""
 
 
 # ==========================================
-# LOAD TRAINED RANDOM FOREST MODEL
+# LOAD TRAINED MODEL
 # ==========================================
 current_folder = Path(__file__).resolve().parent
 
@@ -178,12 +188,12 @@ if model_path is None:
 try:
     model = joblib.load(model_path)
 except Exception as error:
-    st.error(f"Could not load the trained model: {error}")
+    st.error(f"Could not load model: {error}")
     st.stop()
 
 
 # ==========================================
-# HERO HEADER
+# HEADER
 # ==========================================
 st.markdown("""
 <div class="hero">
@@ -197,19 +207,15 @@ st.markdown("""
 
 
 # ==========================================
-# INTRODUCTION
+# VEHICLE INPUT FORM
 # ==========================================
 st.markdown("### Vehicle Specifications")
 
 st.write(
-    "Enter the vehicle details below to estimate "
+    "Enter the vehicle information to estimate "
     "its carbon dioxide emissions."
 )
 
-
-# ==========================================
-# VEHICLE INPUT FORM
-# ==========================================
 with st.form("vehicle_prediction_form"):
 
     col1, col2 = st.columns(2)
@@ -270,47 +276,82 @@ with st.form("vehicle_prediction_form"):
         )
 
     submitted = st.form_submit_button(
-        "⚡ PREDICT CO₂ EMISSIONS",
+        "🚗 PREDICT CO₂ EMISSIONS",
         use_container_width=True
     )
 
 
 # ==========================================
-# PREDICTION RESULT
+# BUTTON AND RESULT SIDE BY SIDE
 # ==========================================
-if submitted:
+st.markdown("### CO₂ Emissions Estimation")
 
-    input_data = pd.DataFrame([{
-        "Vehicle Class": vehicle_class,
-        "Engine Size(L)": engine_size,
-        "Cylinders": cylinders,
-        "Transmission": transmission,
-        "Fuel Type": fuel_type
-    }])
+button_col, result_col = st.columns([1, 1.4], gap="medium")
 
-    try:
+with button_col:
 
-        prediction = model.predict(input_data)[0]
+    st.markdown("""
+    <div style="
+        background:#14253B;
+        border:1px solid #35516F;
+        border-radius:14px;
+        padding:15px;
+        text-align:center;
+        min-height:105px;
+    ">
+        <p style="color:#AFC5DC;font-size:13px;">
+            YOUR VEHICLE EMISSIONS
+        </p>
+        <p style="color:#00D4FF;font-size:17px;font-weight:700;">
+            Ready to estimate?
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
 
-        st.markdown("---")
-        st.markdown("### Emissions Prediction")
+with result_col:
 
-        st.markdown(f"""
-        <div class="result-card">
-            <div class="result-label">
-                ESTIMATED CARBON DIOXIDE EMISSIONS
+    if submitted:
+
+        input_data = pd.DataFrame([{
+            "Vehicle Class": vehicle_class,
+            "Engine Size(L)": engine_size,
+            "Cylinders": cylinders,
+            "Transmission": transmission,
+            "Fuel Type": fuel_type
+        }])
+
+        try:
+            # Original model prediction logic
+            prediction = model.predict(input_data)[0]
+
+            st.markdown(f"""
+            <div class="result-card">
+                <div class="result-label">
+                    ESTIMATED CO₂ EMISSIONS
+                </div>
+                <div class="result-value">
+                    {prediction:.2f}
+                </div>
+                <div class="result-unit">
+                    grams of CO₂ per kilometre (g/km)
+                </div>
             </div>
-            <div class="result-value">
-                {prediction:.2f}
-            </div>
-            <div class="result-unit">
-                grams of CO₂ per kilometre (g/km)
-            </div>
+            """, unsafe_allow_html=True)
+
+        except Exception as error:
+            st.error(f"Prediction failed: {error}")
+
+    else:
+
+        st.markdown("""
+        <div class="waiting-card">
+            <p>ESTIMATED CO₂ EMISSIONS</p>
+            <p style="font-size:22px;font-weight:700;color:#00D4FF;">
+                -- g/km
+            </p>
+            <p>Enter vehicle details and click Predict.</p>
         </div>
         """, unsafe_allow_html=True)
-
-    except Exception as error:
-        st.error(f"Prediction failed: {error}")
 
 
 # ==========================================
